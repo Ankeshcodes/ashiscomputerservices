@@ -1,3 +1,5 @@
+document.addEventListener("DOMContentLoaded", () => {
+
 /* app.js
    Full app:
    - Products (register) & Tickets (create)
@@ -430,3 +432,5 @@ function renderAdminTable(){
         <button class="btn" onclick="openModal('${t.id}')">Open</button>
         <button class="btn btn-outline" onclick="openTicketForEdit('${t.id}')">Edit</button>
         <button class="btn btn-outline" onclick="adminDeleteTicket('${t.i
+
+                }); // END DOM READY WRAPPER                                                      
