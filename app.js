@@ -148,6 +148,11 @@ function closeModal() {
   if (modal) modal.classList.add("hidden");
 }
 
+function closeModal() {
+  document.querySelectorAll(".modal").forEach(m => {
+      m.classList.add("hidden");
+  });
+}
 // ---------------- Storage helpers ----------------
 function loadStore(){
   try{
