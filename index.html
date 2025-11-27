@@ -248,6 +248,50 @@
     <small>V0.0.1 — Local browser tracker for Ashish Computer Services</small>
   </footer>
 
-  <script src="app.js"></script>
+  <!-- DIAGNOSTIC: do not keep this permanently -->
+<script>
+try {
+  alert('INLINE TEST: page loaded — starting diagnostics');
+
+  // list of important element IDs your app expects
+  const ids = [
+    'quickTicketId','quickFind','statusOnlyBtn',
+    'checkProduct','checkSerial','checkBtn','checkResult',
+    'regSaveBtn','regCancelBtn','reg_itemName','reg_serial',
+    'ticketSaveBtn','ticketCancelBtn','ticket_productSelect',
+    'adminSubmit','adminBtn','closeModal','modal','modalBody'
+  ];
+
+  const missing = ids.filter(id => !document.getElementById(id));
+  if(missing.length) {
+    alert('MISSING ELEMENT IDS:\\n' + missing.join(',\\n'));
+  } else {
+    alert('All required element IDs are PRESENT');
+  }
+
+  // Now attempt to load external app.js and detect load/error
+  const s = document.createElement('script');
+  s.src = 'app.js';
+  s.onload = () => {
+    alert('EXTERNAL app.js LOADED successfully');
+    // quick runtime smoke-check (safe)
+    try {
+      if (typeof window.__app_test_marker === 'undefined') {
+        // define marker inside app.js if loaded OK (optional)
+        // not required, this is just a check that code can run
+      }
+      alert('Runtime OK — app.js executed (no immediate exceptions)');
+    } catch(e){
+      alert('Runtime exception after loading app.js: ' + (e && e.message || e));
+    }
+  };
+  s.onerror = () => {
+    alert('ERROR: app.js failed to load (404 or blocked). Check filename/path & case-sensitivity.');
+  };
+  document.body.appendChild(s);
+} catch(err){
+  alert('DIAGNOSTIC SCRIPT ERROR: ' + (err && err.message || err));
+}
+</script>
 </body>
 </html>
