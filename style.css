@@ -1,4 +1,4 @@
-:root{
+::root{
   --bg: #f7fbff;
   --card: #ffffff;
   --accent-1: #2563eb;
@@ -119,4 +119,44 @@ body{
   .layout{flex-direction:column;padding:16px}
   .sidebar{width:100%}
   .hero-left{max-width:100%}
+}
+
+/* ===========================
+   CLICK-BLOCKING FIXES
+   (Ensure hidden/backdrop do not block pointer events)
+   =========================== */
+
+/* Generic hidden utility: hide visually and remove from pointer events */
+.hidden {
+  display: none !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
+/* Ensure specific modal/backdrop IDs are fully non-interactive when hidden */
+#modal.hidden,
+#adminModal.hidden,
+#adminRegisterProductModal.hidden,
+#adminCreateTicketModal.hidden,
+.modal.hidden,
+.modal-backdrop.hidden,
+.backdrop.hidden {
+  display: none !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
+/* If you used .overlay or .backdrop classes for modal backgrounds, include them */
+.overlay.hidden,
+.backdrop.hidden,
+.modal-overlay.hidden {
+  display: none !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
+/* Extra safety: prevent large flex containers accidentally overlapping */
+html, body {
+  height: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
