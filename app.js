@@ -6,7 +6,8 @@
    - Warranty days calculation & receipt printing
    - Products list with delete & view (admin)
 */
-
+console.log("app.js start");
+try { alert("app.js loaded"); } catch(e) {}
 // === CONFIG ===
 const STORAGE_KEY = "warranty_v001_store_v2";
 const ADMIN_SESSION_KEY = "warranty_admin_session_modern";
