@@ -118,7 +118,27 @@
       const exportBtn = document.getElementById('exportBtn');
 
       // wire buttons
-      adminBtn.addEventListener('click', ()=> openAdminModal());
+      // Admin button: open login modal when logged out, logout when logged in
+adminBtn.addEventListener('click', async () => {
+  try {
+    if (isAdmin()) {
+      // currently logged in -> offer logout
+      const ok = confirm("Logout from admin account?");
+      if (ok) {
+        adminLogoutFn();          // from app.js
+        renderAdmin();            // refresh admin UI
+        adminBtn.textContent = "Admin Login";
+        alert("Logged out.");
+      }
+    } else {
+      // not logged in -> open login modal
+      document.getElementById('adminModal').classList.remove('hidden');
+    }
+  } catch (err) {
+    console.error("Admin button handler error:", err);
+    document.getElementById('adminModal').classList.remove('hidden');
+  }
+});
       document.getElementById('closeAdmin').addEventListener('click', ()=> document.getElementById('adminModal').classList.add('hidden'));
       adminSubmit.addEventListener('click', async ()=>{
         const u = document.getElementById('adminUser').value.trim();
@@ -146,24 +166,65 @@
 
       // render admin panels
       function renderAdmin(){
-        const logged = isAdmin();
-        document.getElementById('adminTableBody').innerHTML = '';
-        if(!logged){
-          document.getElementById('adminTableBody').innerHTML = '<tr><td colspan="6" style="padding:8px">Please login to manage tickets.</td></tr>';
-          renderProductsList();
-          return;
-        }
-        // populate tickets
-        const data = getAllTickets().slice().sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
-        if(!data.length) document.getElementById('adminTableBody').innerHTML = '<tr><td colspan="6" style="padding:8px">No tickets</td></tr>';
-        else {
-          data.forEach(t=>{
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${t.id}</td><td>${escapeHtml(t.custName)}</td><td>${escapeHtml(t.itemName)}</td><td>${escapeHtml(t.productId)}</td><td>${escapeHtml(t.status)}</td>
-              <td><button class="btn" onclick="openModal('${t.id}')">Open</button> <button class="btn btn-outline" onclick="adminDeleteTicket('${t.id}')">Delete</button></td>`;
-            document.getElementById('adminTableBody').appendChild(tr);
-          });
-        }
+  const logged = isAdmin();
+
+  // update button text
+  const adminBtnEl = document.getElementById('adminBtn');
+  if (adminBtnEl) {
+    adminBtnEl.textContent = logged ? `Admin: ${localStorage.getItem('warranty_admin_session_modern')}` : "Admin Login";
+  }
+
+  // disable / enable top buttons
+  const regBtn = document.getElementById("adminRegisterProductBtn");
+  const createBtn = document.getElementById("adminCreateTicketBtn");
+
+  if (regBtn) {
+    regBtn.disabled = !logged;
+    regBtn.classList.toggle("btn-outline", !logged);
+  }
+
+  if (createBtn) {
+    createBtn.disabled = !logged;
+    createBtn.classList.toggle("btn-outline", !logged);
+  }
+
+  // reset table
+  document.getElementById("adminTableBody").innerHTML = "";
+
+  // not logged in → show message only
+  if (!logged) {
+    document.getElementById("adminTableBody").innerHTML =
+      '<tr><td colspan="6" style="padding:8px">Please login to manage tickets.</td></tr>';
+    renderProductsList();
+    return;
+  }
+
+  // logged in → show tickets
+  const data = getAllTickets().slice().sort((a,b)=> b.createdAt.localeCompare(a.createdAt));
+
+  if (!data.length) {
+    document.getElementById("adminTableBody").innerHTML =
+      '<tr><td colspan="6" style="padding:8px">No tickets</td></tr>';
+  } else {
+    data.forEach(t => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${t.id}</td>
+        <td>${escapeHtml(t.custName)}</td>
+        <td>${escapeHtml(t.itemName)}</td>
+        <td>${escapeHtml(t.productId)}</td>
+        <td>${escapeHtml(t.status)}</td>
+        <td>
+          <button class="btn" onclick="openModal('${t.id}')">Open</button>
+          <button class="btn btn-outline" onclick="adminDeleteTicket('${t.id}')">Delete</button>
+        </td>`;
+      document.getElementById("adminTableBody").appendChild(tr);
+    });
+  }
+
+  // always refresh product list at the bottom
+  renderProductsList();
+}
         renderProductsList();
       }
     })();
