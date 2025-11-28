@@ -16,7 +16,8 @@
       </div>
     </div>
     <div class="header-actions">
-      <a href="admin.html" class="btn btn-outline">Admin Login</a>
+      <!-- changed to point to admin-login.html -->
+      <a href="admin-login.html" class="btn btn-outline">Admin Login</a>
     </div>
   </header>
 
@@ -72,11 +73,11 @@
     <div class="modal-panel"><button class="close" id="closeModal">&times;</button><div id="modalBody"></div></div>
   </div>
 
-  <footer class="footer"><small>V0.0.1 — Ashish Computer Services</small></footer>
+  <footer class="footer"><small>V0.0.2 — Ashish Computer Services</small></footer>
 
   <script src="app.js"></script>
   <script>
-    // Public page initialization
+    // Public page initialization (unchanged behavior)
     (function(){
       const role = document.body.dataset.role;
       if(role !== 'public') return;
