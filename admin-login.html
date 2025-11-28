@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Login — Ashish Computer Services</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-role="login">
+  <header class="site-header">
+    <div class="brand">
+      <div style="width:44px;height:44px;background:linear-gradient(90deg,#2563eb,#00b4d8);border-radius:8px"></div>
+      <div>
+        <h1>Ashish Computer Services</h1>
+        <div class="tagline">Admin Login</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <a href="index.html" class="btn btn-outline">Public View</a>
+    </div>
+  </header>
+
+  <main class="layout" style="justify-content:center;align-items:center;padding-top:40px">
+    <section class="card login-card" style="max-width:520px;width:100%">
+      <h3>Admin Login</h3>
+      <div style="margin-top:8px">
+        <label>Username</label>
+        <input id="loginUser" placeholder="Username" />
+        <label style="margin-top:8px">Password</label>
+        <input id="loginPass" placeholder="Password" type="password" />
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button id="loginSubmit" class="btn btn-primary">Login</button>
+          <a href="index.html" class="btn btn-outline">Cancel</a>
+        </div>
+        <div id="loginMsg" class="muted" style="margin-top:8px"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer"><small>V0.0.2 — Admin Login</small></footer>
+
+  <script src="app.js"></script>
+  <script>
+    (function(){
+      // if already logged in, go to admin
+      if(isAdmin()){ location.href = 'admin.html'; return; }
+      document.getElementById('loginSubmit').addEventListener('click', async () => {
+        const u = (document.getElementById('loginUser').value||'').trim();
+        const p = (document.getElementById('loginPass').value||'').trim();
+        if(!u||!p){ document.getElementById('loginMsg').textContent = 'Enter credentials'; return; }
+        const ok = await adminLogin(u,p);
+        if(ok){ location.href = 'admin.html'; } else { document.getElementById('loginMsg').textContent = 'Invalid username or password'; }
+      });
+    })();
+  </script>
+</body>
+</html>
