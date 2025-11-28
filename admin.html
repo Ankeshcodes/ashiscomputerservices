@@ -225,8 +225,26 @@ adminBtn.addEventListener('click', async () => {
   // always refresh product list at the bottom
   renderProductsList();
 }
-        renderProductsList();
-      }
+// Auto-open admin login modal if not logged in
+setTimeout(() => {
+  if (!isAdmin()) {
+    const modal = document.getElementById("adminModal");
+    if (modal) {
+      modal.classList.remove("hidden");
+      console.log("Login modal auto-opened (not logged in).");
+    } else {
+      console.warn("adminModal not found");
+    }
+  }
+}, 100);
+
+// Also disable admin actions when logged out
+if (!isAdmin()) {
+  document.getElementById("adminRegisterProductBtn").disabled = true;
+  document.getElementById("adminCreateTicketBtn").disabled = true;
+}
+
+     
     })();
   </script>
 </body>
