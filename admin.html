@@ -17,7 +17,8 @@
     </div>
     <div class="header-actions">
       <a href="index.html" class="btn btn-outline">Public View</a>
-      <button id="adminBtn" class="btn btn-primary">Admin Login</button>
+      <!-- logout button -->
+      <button id="logoutBtn" class="btn btn-outline">Logout</button>
     </div>
   </header>
 
@@ -42,25 +43,6 @@
       <div id="adminProductsWrap" class="card" style="margin-top:12px"></div>
     </section>
   </main>
-
-  <!-- Modals -->
-  <div id="modal" class="modal hidden"><div class="modal-panel"><button class="close" id="closeModal">&times;</button><div id="modalBody"></div></div></div>
-
-  <div id="adminModal" class="modal hidden">
-    <div class="modal-panel small">
-      <button class="close" id="closeAdmin">&times;</button>
-      <h3 id="adminModalTitle">Admin Login</h3>
-      <div style="margin-top:8px">
-        <input id="adminUser" placeholder="Username" />
-        <input id="adminPass" placeholder="Password" type="password" style="margin-top:8px" />
-        <div style="margin-top:8px;display:flex;gap:8px">
-          <button id="adminSubmit" class="btn btn-primary">Login</button>
-          <button id="adminLogout" class="btn btn-outline" style="display:none">Logout</button>
-        </div>
-        <div id="adminMsg" class="muted" style="margin-top:6px"></div>
-      </div>
-    </div>
-  </div>
 
   <!-- Register Product modal -->
   <div id="adminRegisterProductModal" class="modal hidden">
@@ -99,60 +81,27 @@
     </div>
   </div>
 
-  <footer class="footer"><small>V0.0.1 — Admin</small></footer>
+  <div id="modal" class="modal hidden"><div class="modal-panel"><button class="close" id="closeModal">&times;</button><div id="modalBody"></div></div></div>
+
+  <footer class="footer"><small>V0.0.2 — Admin</small></footer>
 
   <script src="app.js"></script>
   <script>
     (function(){
-      const role = document.body.dataset.role;
-      if(role !== 'admin') return;
+      // Protect admin page: redirect to login if not admin
+      if(!isAdmin()){ location.href = 'admin-login.html'; return; }
 
-      // ELEMENTS
-      const adminBtn = document.getElementById('adminBtn');
-      const adminModal = document.getElementById('adminModal');
-      const adminSubmit = document.getElementById('adminSubmit');
-      const adminLogout = document.getElementById('adminLogout');
-      const adminMsg = document.getElementById('adminMsg');
-      const adminRegisterProductBtn = document.getElementById('adminRegisterProductBtn');
-      const adminCreateTicketBtn = document.getElementById('adminCreateTicketBtn');
-      const exportBtn = document.getElementById('exportBtn');
-
-      // wire buttons
-      // Admin button: open login modal when logged out, logout when logged in
-adminBtn.addEventListener('click', async () => {
-  try {
-    if (isAdmin()) {
-      // currently logged in -> offer logout
-      const ok = confirm("Logout from admin account?");
-      if (ok) {
-        adminLogoutFn();          // from app.js
-        renderAdmin();            // refresh admin UI
-        adminBtn.textContent = "Admin Login";
-        alert("Logged out.");
-      }
-    } else {
-      // not logged in -> open login modal
-      document.getElementById('adminModal').classList.remove('hidden');
-    }
-  } catch (err) {
-    console.error("Admin button handler error:", err);
-    document.getElementById('adminModal').classList.remove('hidden');
-  }
-});
-      document.getElementById('closeAdmin').addEventListener('click', ()=> document.getElementById('adminModal').classList.add('hidden'));
-      adminSubmit.addEventListener('click', async ()=>{
-        const u = document.getElementById('adminUser').value.trim();
-        const p = document.getElementById('adminPass').value.trim();
-        const ok = await adminLogin(u,p);
-        if(ok){ adminMsg.textContent='Logged in'; document.getElementById('adminModal').classList.add('hidden'); renderAdmin(); } else adminMsg.textContent='Invalid';
+      // Wire logout
+      document.getElementById('logoutBtn').addEventListener('click', ()=>{
+        adminLogoutFn();
+        location.href = 'index.html';
       });
-      adminLogout.addEventListener('click', ()=>{ adminLogoutFn(); renderAdmin(); });
 
-      adminRegisterProductBtn.addEventListener('click', openRegisterProductModal);
-      adminCreateTicketBtn.addEventListener('click', openCreateTicketModal);
-      exportBtn.addEventListener('click', exportCSV);
+      // Wire admin actions to functions provided by app.js
+      document.getElementById('adminRegisterProductBtn').addEventListener('click', openRegisterProductModal);
+      document.getElementById('adminCreateTicketBtn').addEventListener('click', openCreateTicketModal);
+      document.getElementById('exportBtn').addEventListener('click', exportCSV);
 
-      document.getElementById('closeModal').addEventListener('click', ()=>document.getElementById('modal').classList.add('hidden'));
       document.getElementById('closeRegisterProduct').addEventListener('click', ()=>document.getElementById('adminRegisterProductModal').classList.add('hidden'));
       document.getElementById('regSaveBtn').addEventListener('click', onRegisterProduct);
       document.getElementById('regCancelBtn').addEventListener('click', ()=>document.getElementById('adminRegisterProductModal').classList.add('hidden'));
@@ -161,90 +110,13 @@ adminBtn.addEventListener('click', async () => {
       document.getElementById('ticketSaveBtn').addEventListener('click', onCreateTicket);
       document.getElementById('ticketCancelBtn').addEventListener('click', ()=>document.getElementById('adminCreateTicketModal').classList.add('hidden'));
 
-      // render view on load
-      renderAdmin();
+      // modal close
+      document.getElementById('closeModal').addEventListener('click', ()=>document.getElementById('modal').classList.add('hidden'));
 
-      // render admin panels
-      function renderAdmin(){
-  const logged = isAdmin();
-
-  // update button text
-  const adminBtnEl = document.getElementById('adminBtn');
-  if (adminBtnEl) {
-    adminBtnEl.textContent = logged ? `Admin: ${localStorage.getItem('warranty_admin_session_modern')}` : "Admin Login";
-  }
-
-  // disable / enable top buttons
-  const regBtn = document.getElementById("adminRegisterProductBtn");
-  const createBtn = document.getElementById("adminCreateTicketBtn");
-
-  if (regBtn) {
-    regBtn.disabled = !logged;
-    regBtn.classList.toggle("btn-outline", !logged);
-  }
-
-  if (createBtn) {
-    createBtn.disabled = !logged;
-    createBtn.classList.toggle("btn-outline", !logged);
-  }
-
-  // reset table
-  document.getElementById("adminTableBody").innerHTML = "";
-
-  // not logged in → show message only
-  if (!logged) {
-    document.getElementById("adminTableBody").innerHTML =
-      '<tr><td colspan="6" style="padding:8px">Please login to manage tickets.</td></tr>';
-    renderProductsList();
-    return;
-  }
-
-  // logged in → show tickets
-  const data = getAllTickets().slice().sort((a,b)=> b.createdAt.localeCompare(a.createdAt));
-
-  if (!data.length) {
-    document.getElementById("adminTableBody").innerHTML =
-      '<tr><td colspan="6" style="padding:8px">No tickets</td></tr>';
-  } else {
-    data.forEach(t => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${t.id}</td>
-        <td>${escapeHtml(t.custName)}</td>
-        <td>${escapeHtml(t.itemName)}</td>
-        <td>${escapeHtml(t.productId)}</td>
-        <td>${escapeHtml(t.status)}</td>
-        <td>
-          <button class="btn" onclick="openModal('${t.id}')">Open</button>
-          <button class="btn btn-outline" onclick="adminDeleteTicket('${t.id}')">Delete</button>
-        </td>`;
-      document.getElementById("adminTableBody").appendChild(tr);
-    });
-  }
-
-  // always refresh product list at the bottom
-  renderProductsList();
-}
-// Auto-open admin login modal if not logged in
-setTimeout(() => {
-  if (!isAdmin()) {
-    const modal = document.getElementById("adminModal");
-    if (modal) {
-      modal.classList.remove("hidden");
-      console.log("Login modal auto-opened (not logged in).");
-    } else {
-      console.warn("adminModal not found");
-    }
-  }
-}, 100);
-
-// Also disable admin actions when logged out
-if (!isAdmin()) {
-  document.getElementById("adminRegisterProductBtn").disabled = true;
-  document.getElementById("adminCreateTicketBtn").disabled = true;
-}
-
-     
+      // Render admin view (defined in app.js)
+      // renderAdmin() will populate tickets table and products list
+      if(typeof renderAdmin === 'function') renderAdmin();
+      else console.warn('renderAdmin missing in app.js');
     })();
   </script>
 </body>
