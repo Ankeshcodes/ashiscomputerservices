@@ -1,0 +1,323 @@
+/* ===========================
+   Global Theme
+   =========================== */
+:root{
+  --bg: #f7fbff;
+  --card: #ffffff;
+  --accent-1: #2563eb;
+  --accent-2: #00b4d8;
+  --muted: #6b7280;
+  --glass: rgba(255,255,255,0.6);
+  --radius: 12px;
+}
+
+*{box-sizing:border-box; margin:0; padding:0;}
+body{
+  font-family: "Inter", "Segoe UI", Roboto, Arial, sans-serif;
+  background: linear-gradient(180deg,#f7fbff 0%, #f3f8ff 100%);
+  color:#0f172a;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ===========================
+   Header
+   =========================== */
+.site-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:18px 28px;
+  border-bottom:1px solid rgba(37,99,235,0.06);
+  background:linear-gradient(90deg,
+    rgba(37,99,235,0.03),
+    rgba(0,180,216,0.02)
+  );
+}
+.brand{display:flex;gap:12px;align-items:center}
+.brand h1{font-size:18px;letter-spacing:0.2px;}
+.tagline{font-size:12px;color:var(--muted)}
+
+.nav ul{display:flex;gap:12px;list-style:none;}
+.nav-item{
+  padding:8px 12px;
+  border-radius:10px;
+  color:var(--muted);
+  cursor:pointer;
+}
+.nav-item:hover,
+.nav-item.active{
+  background:linear-gradient(90deg,#e9f2ff,#f0fdff);
+  color:var(--accent-1);
+  font-weight:600;
+}
+
+.header-actions .btn{
+  padding:8px 14px;
+  border-radius:10px;
+  border:none;
+  cursor:pointer;
+}
+
+/* ===========================
+   Layout
+   =========================== */
+.layout{
+  display:flex;
+  gap:20px;
+  padding:22px;
+  max-width:1200px;
+  margin:20px auto;
+}
+.sidebar{width:260px;}
+.content{flex:1;}
+
+/* ===========================
+   Cards
+   =========================== */
+.card{
+  background:var(--card);
+  border-radius:var(--radius);
+  padding:16px;
+  box-shadow:0 6px 20px rgba(12,24,50,0.06);
+  margin-bottom:14px;
+}
+
+/* ===========================
+   Sidebar Menu
+   =========================== */
+.side-menu{
+  list-style:none;
+}
+.side-menu li{
+  padding:10px;
+  border-radius:10px;
+  cursor:pointer;
+}
+.side-menu li:hover{
+  background:#f1f7ff;
+  color:var(--accent-1);
+  font-weight:600;
+}
+.contact-card p{color:var(--muted);margin-top:4px}
+
+/* ===========================
+   Hero Section
+   =========================== */
+.hero{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.hero h2{margin-bottom:6px;}
+.hero p{color:var(--muted)}
+
+.track{
+  display:flex;
+  gap:8px;
+  margin-top:12px;
+}
+.track input{
+  flex:1;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid rgba(15,23,42,0.06);
+}
+
+/* ===========================
+   Buttons
+   =========================== */
+.btn{
+  background:#fff;
+  border:1px solid rgba(15,23,42,0.06);
+  padding:10px 12px;
+  border-radius:10px;
+  cursor:pointer;
+  transition:0.1s;
+}
+.btn:hover{transform:translateY(-1px);}
+
+.btn-primary{
+  background:linear-gradient(90deg,var(--accent-1),var(--accent-2));
+  color:#fff;
+  border:none;
+}
+.btn-outline{
+  background:transparent;
+  border:1px solid rgba(15,23,42,0.2);
+}
+
+/* ===========================
+   Stats Box
+   =========================== */
+.hero-right{
+  display:flex;
+  gap:10px;
+}
+.stat{
+  background:linear-gradient(180deg,
+    rgba(37,99,235,0.04),
+    rgba(0,180,216,0.02)
+  );
+  padding:12px;
+  min-width:96px;
+  border-radius:10px;
+  text-align:center;
+}
+.stat-number{font-weight:700;font-size:18px}
+.stat-label{font-size:12px;color:var(--muted)}
+
+/* ===========================
+   Panels
+   =========================== */
+.panel .row{
+  display:flex;
+  gap:10px;
+  margin-bottom:10px;
+}
+.form input,
+.form textarea,
+.form select{
+  padding:10px;
+  width:100%;
+  border-radius:10px;
+  border:1px solid rgba(15,23,42,0.06);
+}
+
+/* ===========================
+   Ticket List
+   =========================== */
+.ticket-item{
+  display:flex;
+  justify-content:space-between;
+  padding:12px;
+  border-radius:10px;
+  background:linear-gradient(180deg,#fff,#fbfdff);
+  border:1px solid rgba(15,23,42,0.05);
+  margin-bottom:10px;
+}
+.ticket-main{display:flex;gap:10px;align-items:center}
+.ticket-meta{font-size:13px;color:var(--muted)}
+.badge{
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:12px;
+}
+
+/* Status colors */
+.status-Received{background:#eef2ff;color:#0b4f9c}
+.status-Sent\ to\ Company{background:#fff7ed;color:#9a3412}
+.status-In\ Service{background:#fff1f2;color:#9f1239}
+.status-Service\ Complete{background:#ecfdf5;color:#065f46}
+.status-Rejected{background:#fff0f6;color:#9f1239}
+.status-Closed{background:#f1f5f9;color:#374151}
+.status-Returned{background:#f8fafc;color:#374151}
+
+/* ===========================
+   Admin Table
+   =========================== */
+#adminTable th,
+#adminTable td{
+  padding:8px;
+  font-size:13px;
+  border-bottom:1px solid #f1f5f9;
+}
+#adminTableBody tr:hover{background:#f8fbff}
+
+/* ===========================
+   Modals
+   =========================== */
+.modal{
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,0.45);
+  z-index:999;
+}
+.modal.hidden{
+  display:none !important;
+  pointer-events:none !important;
+  visibility:hidden !important;
+}
+
+.modal-panel{
+  background:var(--card);
+  padding:20px;
+  border-radius:16px;
+  max-width:700px;
+  width:92%;
+  max-height:90vh;
+  overflow:auto;
+  position:relative;
+}
+.modal-panel.small{max-width:500px;}
+.close{
+  position:absolute;
+  right:18px; top:10px;
+  font-size:22px;
+  background:none;
+  border:none;
+  cursor:pointer;
+}
+
+/* Timeline */
+.timeline .step{
+  background:#fbfdff;
+  margin-bottom:10px;
+  padding:10px;
+  border-radius:10px;
+  border-left:4px solid rgba(37,99,235,0.1);
+}
+
+/* ===========================
+   Footer
+   =========================== */
+.footer{
+  text-align:center;
+  padding:16px;
+  color:var(--muted);
+  font-size:13px;
+}
+
+/* ===========================
+   PRINTING
+   =========================== */
+@media print{
+  body * { visibility:hidden; }
+  .print-area, .print-area *{
+    visibility:visible;
+  }
+  .print-area{
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+  }
+}
+
+/* ===========================
+   Responsive
+   =========================== */
+@media (max-width:900px){
+  .layout{flex-direction:column;}
+  .sidebar{width:100%}
+}
+
+/* ===========================
+   CRITICAL FIX — prevents UI freezing
+   =========================== */
+.hidden{
+  display:none !important;
+  pointer-events:none !important;
+  visibility:hidden !important;
+}
+
+#modal.hidden,
+#adminModal.hidden,
+#adminRegisterProductModal.hidden,
+#adminCreateTicketModal.hidden{
+  display:none !important;
+  pointer-events:none !important;
+  visibility:hidden !important;
+}

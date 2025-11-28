@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ashish Computer Services — Admin</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-role="admin">
+  <header class="site-header">
+    <div class="brand">
+      <div style="width:44px;height:44px;background:linear-gradient(90deg,#2563eb,#00b4d8);border-radius:8px"></div>
+      <div>
+        <h1>Ashish Computer Services</h1>
+        <div class="tagline">Warranty & Service — Admin</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <a href="index.html" class="btn btn-outline">Public View</a>
+      <button id="adminBtn" class="btn btn-primary">Admin Login</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="content" style="width:100%">
+      <div class="card">
+        <h3>Admin Dashboard</h3>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+          <button id="adminRegisterProductBtn" class="btn btn-primary">Register Product</button>
+          <button id="adminCreateTicketBtn" class="btn btn-primary">Create Ticket</button>
+          <button id="exportBtn" class="btn">Export CSV</button>
+        </div>
+
+        <div id="adminTableWrap" style="max-height:320px;overflow:auto">
+          <table id="adminTable" style="width:100%;border-collapse:collapse">
+            <thead><tr><th>ID</th><th>Cust</th><th>Item</th><th>Product</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="adminTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="adminProductsWrap" class="card" style="margin-top:12px"></div>
+    </section>
+  </main>
+
+  <!-- Modals -->
+  <div id="modal" class="modal hidden"><div class="modal-panel"><button class="close" id="closeModal">&times;</button><div id="modalBody"></div></div></div>
+
+  <div id="adminModal" class="modal hidden">
+    <div class="modal-panel small">
+      <button class="close" id="closeAdmin">&times;</button>
+      <h3 id="adminModalTitle">Admin Login</h3>
+      <div style="margin-top:8px">
+        <input id="adminUser" placeholder="Username" />
+        <input id="adminPass" placeholder="Password" type="password" style="margin-top:8px" />
+        <div style="margin-top:8px;display:flex;gap:8px">
+          <button id="adminSubmit" class="btn btn-primary">Login</button>
+          <button id="adminLogout" class="btn btn-outline" style="display:none">Logout</button>
+        </div>
+        <div id="adminMsg" class="muted" style="margin-top:6px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Register Product modal -->
+  <div id="adminRegisterProductModal" class="modal hidden">
+    <div class="modal-panel small">
+      <button class="close" id="closeRegisterProduct">&times;</button>
+      <h3>Register Product</h3>
+      <input id="reg_itemName" placeholder="Item name" />
+      <input id="reg_serial" placeholder="Serial" style="margin-top:8px" />
+      <input id="reg_billNo" placeholder="Bill No." style="margin-top:8px" />
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <input id="reg_purchaseDate" type="date" />
+        <input id="reg_warrantyMonths" type="number" placeholder="Warranty months" />
+      </div>
+      <div style="margin-top:8px;display:flex;gap:8px">
+        <button id="regSaveBtn" class="btn btn-primary">Save</button>
+        <button id="regCancelBtn" class="btn btn-outline">Cancel</button>
+      </div>
+      <div id="regMsg" class="muted" style="margin-top:6px"></div>
+    </div>
+  </div>
+
+  <!-- Create Ticket modal -->
+  <div id="adminCreateTicketModal" class="modal hidden">
+    <div class="modal-panel small">
+      <button class="close" id="closeCreateTicket">&times;</button>
+      <h3>Create Ticket</h3>
+      <select id="ticket_productSelect"></select>
+      <input id="ticket_custName" placeholder="Customer name" style="margin-top:8px" />
+      <input id="ticket_custPhone" placeholder="Phone" style="margin-top:8px" />
+      <textarea id="ticket_problem" placeholder="Problem" style="margin-top:8px"></textarea>
+      <div style="margin-top:8px;display:flex;gap:8px">
+        <button id="ticketSaveBtn" class="btn btn-primary">Create</button>
+        <button id="ticketCancelBtn" class="btn btn-outline">Cancel</button>
+      </div>
+      <div id="ticketMsg" class="muted" style="margin-top:6px"></div>
+    </div>
+  </div>
+
+  <footer class="footer"><small>V0.0.1 — Admin</small></footer>
+
+  <script src="app.js"></script>
+  <script>
+    (function(){
+      const role = document.body.dataset.role;
+      if(role !== 'admin') return;
+
+      // ELEMENTS
+      const adminBtn = document.getElementById('adminBtn');
+      const adminModal = document.getElementById('adminModal');
+      const adminSubmit = document.getElementById('adminSubmit');
+      const adminLogout = document.getElementById('adminLogout');
+      const adminMsg = document.getElementById('adminMsg');
+      const adminRegisterProductBtn = document.getElementById('adminRegisterProductBtn');
+      const adminCreateTicketBtn = document.getElementById('adminCreateTicketBtn');
+      const exportBtn = document.getElementById('exportBtn');
+
+      // wire buttons
+      adminBtn.addEventListener('click', ()=> openAdminModal());
+      document.getElementById('closeAdmin').addEventListener('click', ()=> document.getElementById('adminModal').classList.add('hidden'));
+      adminSubmit.addEventListener('click', async ()=>{
+        const u = document.getElementById('adminUser').value.trim();
+        const p = document.getElementById('adminPass').value.trim();
+        const ok = await adminLogin(u,p);
+        if(ok){ adminMsg.textContent='Logged in'; document.getElementById('adminModal').classList.add('hidden'); renderAdmin(); } else adminMsg.textContent='Invalid';
+      });
+      adminLogout.addEventListener('click', ()=>{ adminLogoutFn(); renderAdmin(); });
+
+      adminRegisterProductBtn.addEventListener('click', openRegisterProductModal);
+      adminCreateTicketBtn.addEventListener('click', openCreateTicketModal);
+      exportBtn.addEventListener('click', exportCSV);
+
+      document.getElementById('closeModal').addEventListener('click', ()=>document.getElementById('modal').classList.add('hidden'));
+      document.getElementById('closeRegisterProduct').addEventListener('click', ()=>document.getElementById('adminRegisterProductModal').classList.add('hidden'));
+      document.getElementById('regSaveBtn').addEventListener('click', onRegisterProduct);
+      document.getElementById('regCancelBtn').addEventListener('click', ()=>document.getElementById('adminRegisterProductModal').classList.add('hidden'));
+
+      document.getElementById('closeCreateTicket').addEventListener('click', ()=>document.getElementById('adminCreateTicketModal').classList.add('hidden'));
+      document.getElementById('ticketSaveBtn').addEventListener('click', onCreateTicket);
+      document.getElementById('ticketCancelBtn').addEventListener('click', ()=>document.getElementById('adminCreateTicketModal').classList.add('hidden'));
+
+      // render view on load
+      renderAdmin();
+
+      // render admin panels
+      function renderAdmin(){
+        const logged = isAdmin();
+        document.getElementById('adminTableBody').innerHTML = '';
+        if(!logged){
+          document.getElementById('adminTableBody').innerHTML = '<tr><td colspan="6" style="padding:8px">Please login to manage tickets.</td></tr>';
+          renderProductsList();
+          return;
+        }
+        // populate tickets
+        const data = getAllTickets().slice().sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
+        if(!data.length) document.getElementById('adminTableBody').innerHTML = '<tr><td colspan="6" style="padding:8px">No tickets</td></tr>';
+        else {
+          data.forEach(t=>{
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${t.id}</td><td>${escapeHtml(t.custName)}</td><td>${escapeHtml(t.itemName)}</td><td>${escapeHtml(t.productId)}</td><td>${escapeHtml(t.status)}</td>
+              <td><button class="btn" onclick="openModal('${t.id}')">Open</button> <button class="btn btn-outline" onclick="adminDeleteTicket('${t.id}')">Delete</button></td>`;
+            document.getElementById('adminTableBody').appendChild(tr);
+          });
+        }
+        renderProductsList();
+      }
+    })();
+  </script>
+</body>
+</html>
