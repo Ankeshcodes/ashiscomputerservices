@@ -1,6 +1,9 @@
-// app.js — shared helpers + storage for public/admin pages
+// app.js - upgraded for V0.0.2
+// Keeps your original store and auth logic, adds page routing and renderAdmin()
+
 const STORAGE_KEY = "warranty_v001_store_v2";
 
+// ---------- store helpers (unchanged) ----------
 function loadStore(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -41,6 +44,7 @@ function doWarrantyCheckPublic(productName, serial){
   const products = getAllProducts();
   const found = products.find(p => (p.itemName||'').toLowerCase() === productName.toLowerCase() && (p.serial||'').toLowerCase() === serial.toLowerCase());
   const el = document.getElementById('checkResult');
+  if(!el) return;
   if(!found){ el.textContent = 'No product found for given name+serial.'; return; }
   const w = warrantyInfoForProduct(found);
   let warrantyText = !w.endDate ? 'Warranty info not available' : (w.onWarranty ? `On warranty — ${w.daysLeft} day(s) left (ends ${formatDate(w.endDate)})` : `Out of warranty — Expired on ${formatDate(w.endDate)}`);
@@ -49,7 +53,7 @@ function doWarrantyCheckPublic(productName, serial){
     <div style="margin-top:8px;color:#0b6;font-weight:600">${warrantyText}</div>`;
 }
 
-// --- Admin auth (simple) ---
+// --- Admin auth (simple, kept same credentials)
 const EMBED_ADMIN_USER = 'admin';
 const EMBED_ADMIN_HASH = 'bf6b5bdb74c79ece9fc0ad0ac9fb0359f9555d4f35a83b2e6ec69ae99e09603d'; // sha256(admin:admin123)
 const ADMIN_SESSION_KEY = 'warranty_admin_session_modern';
@@ -72,7 +76,7 @@ async function adminLogin(user, pass){
 function adminLogoutFn(){ localStorage.removeItem(ADMIN_SESSION_KEY); }
 function isAdmin(){ return !!localStorage.getItem(ADMIN_SESSION_KEY); }
 
-// --- small admin helper functions used on admin.html (exposed globally) ---
+// expose some functions to global for pages to call
 window.getAllProducts = getAllProducts;
 window.getAllTickets = getAllTickets;
 window.findProduct = findProduct;
@@ -84,9 +88,11 @@ window.adminDeleteTicket = function(ticketId){
   if(!isAdmin()) return alert('Admin only');
   const ticks = getAllTickets().filter(t=>t.id !== ticketId);
   writeTickets(ticks);
-  location.reload();
+  // refresh render if available
+  if(typeof renderAdmin === 'function') renderAdmin();
 };
 
+// export CSV
 window.exportCSV = function(){
   const tickets = getAllTickets();
   const rows = [["id","productId","custName","custPhone","itemName","serial","model","billNo","purchaseDate","warrantyMonths","receivedDate","priority","status","createdAt","problem"]];
@@ -98,7 +104,7 @@ window.exportCSV = function(){
   URL.revokeObjectURL(url);
 };
 
-// --- Admin register product & create ticket helpers exposed for admin.html to call ---
+// --- Admin register product & create ticket helpers ---
 window.onRegisterProduct = function(){
   if(!isAdmin()) return alert('Admin only');
   const itemName = (document.getElementById('reg_itemName').value||'').trim();
@@ -112,7 +118,7 @@ window.onRegisterProduct = function(){
   products.unshift(p);
   writeProducts(products);
   document.getElementById('regMsg').textContent = `Registered ${p.productId}`;
-  setTimeout(()=>{ document.getElementById('adminRegisterProductModal').classList.add('hidden'); location.reload(); },800);
+  setTimeout(()=>{ document.getElementById('adminRegisterProductModal').classList.add('hidden'); if(typeof renderAdmin==='function') renderAdmin(); },800);
 };
 
 window.openRegisterProductModal = function(){ document.getElementById('adminRegisterProductModal').classList.remove('hidden'); document.getElementById('regMsg').textContent=''; };
@@ -157,7 +163,7 @@ window.onCreateTicket = function(){
   tickets.unshift(t);
   writeTickets(tickets);
   document.getElementById('adminCreateTicketModal').classList.add('hidden');
-  setTimeout(()=>{ openTicketInModal(t.id); }, 300);
+  setTimeout(()=>{ openTicketInModal(t.id); if(typeof renderAdmin === 'function') renderAdmin(); }, 300);
 };
 
 function openTicketInModal(id){
@@ -170,13 +176,125 @@ function openTicketInModal(id){
     <div class="ticket-meta">Customer: ${escapeHtml(t.custName)} • ${escapeHtml(t.custPhone||'—')}</div>
     <div style="margin-top:8px;color:#0b6;font-weight:600">${warrantyText}</div>
     <section class="timeline">${t.timeline.map(s=>`<div class="step">${escapeHtml(s.status)} — ${escapeHtml(s.note||'')}</div>`).join('')}</section>
-    <div style="margin-top:8px"><button class="btn" onclick="printTicketReceipt(${JSON.stringify(t).replace(/</g,'&lt;')})">Print</button></div>`;
+    <div style="margin-top:8px"><button class="btn" onclick='printTicketReceipt(${JSON.stringify(t).replace(/</g,"\\u003c")})'>Print</button></div>`;
   document.getElementById('modal').classList.remove('hidden');
 }
+window.openTicketInModal = openTicketInModal;
 
 // print minimal receipt (admin)
 function printTicketReceipt(ticket){
-  // If ticket was passed as object string, ensure object
   if(typeof ticket === 'string') ticket = JSON.parse(ticket);
   const prod = findProduct(ticket.productId) || {};
   const w = warrantyInfoForProduct(prod);
+  const html = `<div class="print-area" style="padding:18px;font-family:Arial">
+    <h2>Receipt — ${escapeHtml(ticket.id)}</h2>
+    <div>Customer: ${escapeHtml(ticket.custName)} • ${escapeHtml(ticket.custPhone||'—')}</div>
+    <div>Item: ${escapeHtml(ticket.itemName)} • Product: ${escapeHtml(ticket.productId)}</div>
+    <div>Received: ${escapeHtml(ticket.receivedDate)}</div>
+    <div style="margin-top:10px">Problem: ${escapeHtml(ticket.problem||'—')}</div>
+  </div>`;
+  const wwin = window.open('', '_blank', 'width=800,height=600');
+  wwin.document.write(html);
+  wwin.document.close();
+  wwin.focus();
+  wwin.print();
+  setTimeout(()=> wwin.close(), 1000);
+}
+
+// --- new: renderAdmin (centralized admin UI renderer) ---
+function renderAdmin(){
+  // ensure admin area exists
+  const tableBody = document.getElementById('adminTableBody');
+  const productsWrap = document.getElementById('adminProductsWrap');
+  if(!tableBody || !productsWrap) return;
+
+  // tickets table
+  const data = getAllTickets().slice().sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
+  tableBody.innerHTML = '';
+  if(!data.length){
+    tableBody.innerHTML = '<tr><td colspan="6" style="padding:8px">No tickets</td></tr>';
+  } else {
+    data.forEach(t=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${t.id}</td><td>${escapeHtml(t.custName)}</td><td>${escapeHtml(t.itemName)}</td><td>${escapeHtml(t.productId)}</td><td>${escapeHtml(t.status)}</td>
+        <td>
+          <button class="btn" data-op="open" data-id="${t.id}">Open</button>
+          <button class="btn btn-outline" data-op="del" data-id="${t.id}">Delete</button>
+        </td>`;
+      tableBody.appendChild(tr);
+    });
+    // wire buttons
+    Array.from(tableBody.querySelectorAll('button[data-op]')).forEach(b=>{
+      const op = b.dataset.op;
+      const id = b.dataset.id;
+      b.addEventListener('click', ()=> {
+        if(op === 'open') openTicketInModal(id);
+        if(op === 'del') { if(confirm('Delete ticket?')) { window.adminDeleteTicket(id); } }
+      });
+    });
+  }
+
+  // products list
+  const prods = getAllProducts();
+  if(!prods.length){
+    productsWrap.innerHTML = '<div class="card">No products registered</div>';
+  } else {
+    productsWrap.innerHTML = `<h4>Products (${prods.length})</h4>` + prods.map(p => `
+      <div class="ticket-item">
+        <div class="ticket-main">
+          <div>
+            <div style="font-weight:700">${escapeHtml(p.itemName)} • ${escapeHtml(p.productId)}</div>
+            <div class="ticket-meta">S/N: ${escapeHtml(p.serial||'—')} • Bill: ${escapeHtml(p.billNo||'—')}</div>
+            <div class="ticket-meta small">Purchase: ${escapeHtml(p.purchaseDate||'—')} • Warranty: ${escapeHtml(p.warrantyMonths||'—')} mo</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn" data-prod="${p.productId}" data-op="view">Open</button>
+          <button class="btn btn-outline" data-prod="${p.productId}" data-op="dereg">Delete</button>
+        </div>
+      </div>
+    `).join('');
+    // wire product buttons
+    Array.from(productsWrap.querySelectorAll('button[data-op]')).forEach(b=>{
+      const op = b.dataset.op;
+      const pid = b.dataset.prod;
+      b.addEventListener('click', ()=> {
+        if(op === 'view'){
+          // open a fake ticket-like modal to show product warranty
+          const prod = findProduct(pid);
+          if(prod) {
+            const w = warrantyInfoForProduct(prod);
+            const warrantyText = !w.endDate ? 'Warranty info not available' : (w.onWarranty ? `On warranty — ${w.daysLeft} day(s) left (ends ${formatDate(w.endDate)})` : `Out of warranty — Expired on ${formatDate(w.endDate)}`);
+            document.getElementById('modalBody').innerHTML = `<h3>${escapeHtml(prod.itemName)} — ${escapeHtml(prod.productId)}</h3>
+              <div class="ticket-meta">S/N: ${escapeHtml(prod.serial||'—')} • Bill: ${escapeHtml(prod.billNo||'—')}</div>
+              <div style="margin-top:8px;color:#0b6;font-weight:600">${warrantyText}</div>`;
+            document.getElementById('modal').classList.remove('hidden');
+          }
+        }
+        if(op === 'dereg' && confirm('Delete product?')) {
+          window.deRegisterProduct(pid);
+          if(typeof renderAdmin === 'function') renderAdmin();
+        }
+      });
+    });
+  }
+}
+
+// Expose renderAdmin so admin.html can call it
+window.renderAdmin = renderAdmin;
+
+// Fill minimal demo data if empty (keeps site usable)
+(function ensureDemoData(){
+  const s = loadStore();
+  if(!s.products || s.products.length === 0){
+    s.products = [
+      { productId: 'P-DEMO1', itemName: 'Demo Laptop', serial: 'DL-1001', billNo: 'B-1001', purchaseDate: new Date().toISOString().slice(0,10), warrantyMonths: 12, createdAt: new Date().toISOString() }
+    ];
+  }
+  if(!s.tickets || s.tickets.length === 0){
+    s.tickets = [
+      { id: 'T-DEMO1', productId: 'P-DEMO1', itemName: 'Demo Laptop', serial: 'DL-1001', model: '', billNo: 'B-1001', purchaseDate: new Date().toISOString().slice(0,10), warrantyMonths: 12, custName: 'Demo', custPhone: '000', problem: 'Demo problem', receivedDate: new Date().toISOString().slice(0,10), createdAt: new Date().toISOString(), status: 'In Service', timeline: [{at:new Date().toISOString(), status:'In Service', note:'Demo'}], notes: [] }
+    ];
+  }
+  saveStore(s);
+})();
