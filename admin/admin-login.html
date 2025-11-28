@@ -16,7 +16,7 @@
       </div>
     </div>
     <div class="header-actions">
-      <a href="/admin/index.html" class="btn btn-outline">Public View</a>
+      <a href="index.html" class="btn btn-outline">Public View</a>
     </div>
   </header>
 
@@ -43,13 +43,13 @@
   <script>
     (function(){
       // if already logged in, go to admin
-      if(isAdmin()){ location.href = 'admin.html'; return; }
+      if(isAdmin()){ location.href = '/admin/admin.html'; return; }
       document.getElementById('loginSubmit').addEventListener('click', async () => {
         const u = (document.getElementById('loginUser').value||'').trim();
         const p = (document.getElementById('loginPass').value||'').trim();
         if(!u||!p){ document.getElementById('loginMsg').textContent = 'Enter credentials'; return; }
         const ok = await adminLogin(u,p);
-        if(ok){ location.href = 'admin.html'; } else { document.getElementById('loginMsg').textContent = 'Invalid username or password'; }
+        if(ok){ location.href = '/admin/admin.html'; } else { document.getElementById('loginMsg').textContent = 'Invalid username or password'; }
       });
     })();
   </script>
